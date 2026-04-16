@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pod Staffing & Client Mapping</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pod1: #FF6B35;
+    --pod2: #7C3AED;
+    --pod3: #059669;
+    --shared: #0EA5E9;
+    --bg: #0A0A0F;
+    --surface: #12121A;
+    --surface2: #1A1A28;
+    --border: rgba(255,255,255,0.07);
+    --text: #F0F0FF;
+    --muted: #6B6B8A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-1 { width: 600px; height: 600px; background: var(--pod1); top: -200px; left: -200px; animation: drift1 20s ease-in-out infinite; }
+  .orb-2 { width: 500px; height: 500px; background: var(--pod2); bottom: -100px; right: -100px; animation: drift2 25s ease-in-out infinite; }
+  .orb-3 { width: 400px; height: 400px; background: var(--pod3); top: 40%; left: 40%; animation: drift3 18s ease-in-out infinite; }
+
+  @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
+  @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-50px,30px)} }
+  @keyframes drift3 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(40px,-30px)} 66%{transform:translate(-30px,20px)} }
+
+  /* Header */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 60px 60px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    display: inline-block;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 64px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  h1 span {
+    display: block;
+    background: linear-gradient(135deg, var(--pod1), var(--pod2), var(--pod3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 0;
+    margin-top: 40px;
+  }
+
+  .stat {
+    flex: 1;
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Nav tabs */
+  .nav {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 0;
+    padding: 0 60px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-tab {
+    padding: 18px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+    text-transform: uppercase;
+    margin-bottom: -1px;
+  }
+
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+  /* Main content */
+  main {
+    position: relative;
+    z-index: 10;
+    padding: 40px 60px 80px;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Section heading */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Pod cards grid */
+  .pods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2px;
+    margin-bottom: 40px;
+  }
+
+  .pod-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  .pod-card:nth-child(2) { animation-delay: 0.1s; }
+  .pod-card:nth-child(3) { animation-delay: 0.2s; }
+
+  .pod-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pod-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pod-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pod-1 .pod-dot { background: var(--pod1); box-shadow: 0 0 12px var(--pod1); }
+  .pod-2 .pod-dot { background: var(--pod2); box-shadow: 0 0 12px var(--pod2); }
+  .pod-3 .pod-dot { background: var(--pod3); box-shadow: 0 0 12px var(--pod3); }
+
+  .pod-count {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* Member rows */
+  .member-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .member-row:last-child { border-bottom: none; }
+  .member-row:hover { background: var(--surface2); }
+
+  .member-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .member-title {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .level-badge {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .level-ACD { background: rgba(255,107,53,0.15); color: var(--pod1); border: 1px solid rgba(255,107,53,0.3); }
+  .level-Lead { background: rgba(124,58,237,0.15); color: #A78BFA; border: 1px solid rgba(124,58,237,0.3); }
+  .level-Senior { background: rgba(5,150,105,0.15); color: #34D399; border: 1px solid rgba(5,150,105,0.3); }
+  .level-Mid { background: rgba(14,165,233,0.15); color: #38BDF8; border: 1px solid rgba(14,165,233,0.3); }
+  .level-Junior { background: rgba(255,255,255,0.07); color: var(--muted); border: 1px solid var(--border); }
+  .level-Intern { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+  .level-Director { background: rgba(239,68,68,0.15); color: #F87171; border: 1px solid rgba(239,68,68,0.3); }
+  .level-Head { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
+  .level-Manager { background: rgba(139,92,246,0.15); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.3); }
+  .level-Executive { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.3); }
+
+  .func-tag {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 70px;
+    text-align: right;
+  }
+
+  /* Shared teams */
+  .shared-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+    margin-top: 2px;
+  }
+
+  .shared-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .shared-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .shared-icon {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--shared);
+    box-shadow: 0 0 8px var(--shared);
+  }
+
+  .shared-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Client mapping */
+  .clients-header {
+    display: grid;
+    grid-template-columns: 1fr 90px 120px 80px 80px 80px 80px;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .client-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 120px 80px 80px 80px 80px;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background 0.15s;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .client-row:hover { background: var(--surface2); }
+  .client-row:last-child { border-bottom: none; }
+
+  .client-name {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .client-name small {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .pieces-bar {
+    position: relative;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pieces-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 30px;
+  }
+
+  .pod-pill {
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .pod-pill.p1 { background: rgba(255,107,53,0.15); color: var(--pod1); border: 1px solid rgba(255,107,53,0.3); }
+  .pod-pill.p2 { background: rgba(124,58,237,0.15); color: #A78BFA; border: 1px solid rgba(124,58,237,0.3); }
+  .pod-pill.p3 { background: rgba(5,150,105,0.15); color: #34D399; border: 1px solid rgba(5,150,105,0.3); }
+
+  .am-name { font-size: 12px; color: var(--muted); }
+
+  .type-val {
+    font-size: 12px;
+    text-align: right;
+    color: var(--muted);
+  }
+  .type-val.has-val { color: var(--text); }
+
+  /* Pod selector tabs */
+  .pod-filter {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 16px;
+  }
+
+  .pod-btn {
+    padding: 8px 18px;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .pod-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .pod-btn.active-p1 { background: rgba(255,107,53,0.15); color: var(--pod1); border-color: rgba(255,107,53,0.4); }
+  .pod-btn.active-p2 { background: rgba(124,58,237,0.15); color: #A78BFA; border-color: rgba(124,58,237,0.4); }
+  .pod-btn.active-p3 { background: rgba(5,150,105,0.15); color: #34D399; border-color: rgba(5,150,105,0.4); }
+  .pod-btn.active-all { background: rgba(255,255,255,0.08); color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* Totals bar */
+  .totals-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-bottom: 2px;
+  }
+
+  .total-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+  }
+
+  .total-pod-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .total-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .total-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .total-item .val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  .total-pieces {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  /* Clients table container */
+  .clients-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  /* Search box */
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    width: 100%;
+    caret-color: var(--pod1);
+  }
+
+  .search-box input::placeholder { color: var(--muted); }
+
+  .search-icon { color: var(--muted); font-size: 14px; }
+
+  /* Hidden rows */
+  .client-row.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<header>
+  <div class="header-top">
+    <div>
+      <div class="badge">Creative Agency · Org Structure</div>
+      <h1>Pod Staffing<br><span>& Client Mapping</span></h1>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-value" style="color:var(--pod1)">59</div>
+      <div class="stat-label">Total Staff</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:var(--pod2)">45</div>
+      <div class="stat-label">Active Clients</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:var(--pod3)">723</div>
+      <div class="stat-label">Pieces / Month</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:var(--shared)">3</div>
+      <div class="stat-label">Creative Pods</div>
+    </div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="nav-tab active" onclick="switchTab('staffing', this)">Pod Staffing</div>
+  <div class="nav-tab" onclick="switchTab('clients', this)">Client Mapping</div>
+</nav>
+
+<main>
+
+  <!-- STAFFING TAB -->
+  <div id="tab-staffing" class="tab-panel active">
+
+    <div class="section-title">Creative Pods</div>
+
+    <div class="pods-grid">
+
+      <!-- POD 1 -->
+      <div class="pod-card pod-1" style="animation-delay:0s">
+        <div class="pod-header">
+          <div class="pod-name"><span class="pod-dot"></span> Pod 1</div>
+          <div class="pod-count">11 members</div>
+        </div>
+        <div class="member-row"><div><div class="member-name">Mohamed Ismail</div><div class="member-title">Art Director</div></div><div class="func-tag">Design</div><div class="level-badge level-ACD">ACD</div></div>
+        <div class="member-row"><div><div class="member-name">Reem Elkadeem</div><div class="member-title">Content Manager</div></div><div class="func-tag">Content</div><div class="level-badge level-Lead">Lead</div></div>
+        <div class="member-row"><div><div class="member-name">Assem Ahmed</div><div class="member-title">Senior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Lead">Lead</div></div>
+        <div class="member-row"><div><div class="member-name">Alaa Abdelrahman</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Mohamed Gabr</div><div class="member-title">Mid-level Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Mohamed Magdy</div><div class="member-title">Mid-level Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Mostafa Attia</div><div class="member-title">Mid-level Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Shahd Mohamed</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Zakaria Mohamed</div><div class="member-title">Junior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Sara Mohamed</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Mohamed Essam</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
+      </div>
+
+      <!-- POD 2 -->
+      <div class="pod-card pod-2" style="animation-delay:0.1s">
+        <div class="pod-header">
+          <div class="pod-name"><span class="pod-dot"></span> Pod 2</div>
+          <div class="pod-count">12 members</div>
+        </div>
+        <div class="member-row"><div><div class="member-name">Yossra Alaaeldin</div><div class="member-title">Head of Content Creation</div></div><div class="func-tag">Content</div><div class="level-badge level-ACD">ACD</div></div>
+        <div class="member-row"><div><div class="member-name">Mohab Awad</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Lead">Lead</div></div>
+        <div class="member-row"><div><div class="member-name">Mohamed Khaled</div><div class="member-title">Senior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Lead">Lead</div></div>
+        <div class="member-row"><div><div class="member-name">Gehad Ahmed</div><div class="member-title">Senior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Amany Mohamed</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Omar Mohamed</div><div class="member-title">Senior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Amira Mostafa</div><div class="member-title">Mid-level Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Esraa Adel</div><div class="member-title">Mid-level Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Enas Mohamed</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Yussef Ashraf</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Omar Farid</div><div class="member-title">Junior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Ahmed Masoud</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
+      </div>
+
+      <!-- POD 3 -->
+      <div class="pod-card pod-3" style="animation-delay:0.2s">
+        <div class="pod-header">
+          <div class="pod-name"><span class="pod-dot"></span> Pod 3</div>
+          <div class="pod-count">12 members</div>
+        </div>
+        <div class="member-row"><div><div class="member-name">Abdelrahman Magdy</div><div class="member-title">Head of Multimedia</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-ACD">ACD</div></div>
+        <div class="member-row"><div><div class="member-name">Donia Ahmed</div><div class="member-title">Content Manager</div></div><div class="func-tag">Content</div><div class="level-badge level-Lead">Lead</div></div>
+        <div class="member-row"><div><div class="member-name">Salwa Mohamed</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Lead">Lead</div></div>
+        <div class="member-row"><div><div class="member-name">Muhannad Elshater</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Ibrahim Abdelmonaem</div><div class="member-title">Mid-level Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Ahmed Badr</div><div class="member-title">Mid-level MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Marwan Mohamed</div><div class="member-title">Mid-level Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Abdelrahman Tarek</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Aya Mohy</div><div class="member-title">Junior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Mahmoud Altaib</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Omar Abdellatif</div><div class="member-title">Intern MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Intern">Intern</div></div>
+      </div>
+    </div>
+
+    <div class="section-title">Shared Functions</div>
+
+    <div class="shared-grid">
+
+      <!-- Account Management -->
+      <div class="shared-card">
+        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Account Management</span></div>
+        <div class="member-row"><div><div class="member-name">Esraa Alaaeldin</div><div class="member-title">Account Director</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Director">Director</div></div>
+        <div class="member-row"><div><div class="member-name">Yasmin Hisham</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Shaimaa Ghareeb</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Rowan Ehab</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Rowaida Mohamed</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Sama El Masry</div><div class="member-title">Mid-level Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Latifa Mohamed</div><div class="member-title">Mid-level Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Mid">Mid</div></div>
+      </div>
+
+      <!-- Performance Marketing -->
+      <div class="shared-card">
+        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Performance Marketing</span></div>
+        <div class="member-row"><div><div class="member-name">Israa Elsayed</div><div class="member-title">Head of Performance Marketing</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Head">Head</div></div>
+        <div class="member-row"><div><div class="member-name">Yomna Ibrahim</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Merna Raafat</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Ibrahim Mostafa</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Hisham Gaber</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Rana Eltayeb</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Alaa Adel</div><div class="member-title">Junior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Junior">Junior</div></div>
+        <div class="member-row"><div><div class="member-name">Ahmed Elnoby</div><div class="member-title">Junior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Junior">Junior</div></div>
+      </div>
+
+      <!-- Community & Ops -->
+      <div class="shared-card">
+        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Community Management</span></div>
+        <div class="member-row"><div><div class="member-name">Asmaa Elwan</div><div class="member-title">Head of Community Management</div></div><div class="func-tag">Community</div><div class="level-badge level-Head">Head</div></div>
+        <div class="member-row"><div><div class="member-name">Nourhan Ahmed</div><div class="member-title">Senior Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Senior">Senior</div></div>
+        <div class="member-row"><div><div class="member-name">Meriam Michael</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Mayada Ahmed</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Nourhan Mohamed</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Sara Ahmed</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
+        <div class="member-row"><div><div class="member-name">Suzan Ibrahim</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
+      </div>
+
+      <!-- Operations -->
+      <div class="shared-card">
+        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Operations & Admin</span></div>
+        <div class="member-row"><div><div class="member-name">Mona Lotfy</div><div class="member-title">Operations Manager</div></div><div class="func-tag">Operations</div><div class="level-badge level-Manager">Manager</div></div>
+        <div class="member-row"><div><div class="member-name">Mahmoud Hisham</div><div class="member-title">Operations Executive</div></div><div class="func-tag">Operations</div><div class="level-badge level-Executive">Executive</div></div>
+        <div class="member-row"><div><div class="member-name">Alaa Ibrahim</div><div class="member-title">EA / Office Manager</div></div><div class="func-tag">CEO Office</div><div class="level-badge level-Manager">Manager</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CLIENTS TAB -->
+  <div id="tab-clients" class="tab-panel">
+
+    <div class="totals-bar">
+      <div class="total-card">
+        <div class="total-pod-label"><span class="pod-dot" style="background:var(--pod1);box-shadow:0 0 10px var(--pod1)"></span>Pod 1</div>
+        <div class="total-pieces" style="color:var(--pod1)">243</div>
+        <div class="total-breakdown">
+          <div class="total-item"><span>Statics</span><span class="val">136</span></div>
+          <div class="total-item"><span>Motion</span><span class="val">12</span></div>
+          <div class="total-item"><span>Reels VE</span><span class="val">49</span></div>
+          <div class="total-item"><span>AI Reels</span><span class="val">46</span></div>
+        </div>
+      </div>
+      <div class="total-card">
+        <div class="total-pod-label"><span class="pod-dot" style="background:var(--pod2);box-shadow:0 0 10px var(--pod2)"></span>Pod 2</div>
+        <div class="total-pieces" style="color:#A78BFA">243</div>
+        <div class="total-breakdown">
+          <div class="total-item"><span>Statics</span><span class="val">113</span></div>
+          <div class="total-item"><span>Motion</span><span class="val">24</span></div>
+          <div class="total-item"><span>Reels VE</span><span class="val">30</span></div>
+          <div class="total-item"><span>AI Reels</span><span class="val">76</span></div>
+        </div>
+      </div>
+      <div class="total-card">
+        <div class="total-pod-label"><span class="pod-dot" style="background:var(--pod3);box-shadow:0 0 10px var(--pod3)"></span>Pod 3</div>
+        <div class="total-pieces" style="color:#34D399">237</div>
+        <div class="total-breakdown">
+          <div class="total-item"><span>Statics</span><span class="val">105</span></div>
+          <div class="total-item"><span>Motion</span><span class="val">26</span></div>
+          <div class="total-item"><span>Reels VE</span><span class="val">24</span></div>
+          <div class="total-item"><span>AI Reels</span><span class="val">82</span></div>
+        </div>
+      </div>
+      <div class="total-card" style="background:rgba(255,255,255,0.03)">
+        <div class="total-pod-label" style="color:var(--muted)">Grand Total</div>
+        <div class="total-pieces">723</div>
+        <div class="total-breakdown">
+          <div class="total-item"><span>Statics</span><span class="val">354</span></div>
+          <div class="total-item"><span>Motion</span><span class="val">62</span></div>
+          <div class="total-item"><span>Reels VE</span><span class="val">103</span></div>
+          <div class="total-item"><span>AI Reels</span><span class="val">204</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin: 24px 0 0;">
+      <div class="pod-filter">
+        <button class="pod-btn active-all" onclick="filterPod('all', this)">All Pods</button>
+        <button class="pod-btn" onclick="filterPod('Pod 1', this)">Pod 1</button>
+        <button class="pod-btn" onclick="filterPod('Pod 2', this)">Pod 2</button>
+        <button class="pod-btn" onclick="filterPod('Pod 3', this)">Pod 3</button>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="Search clients or AMs..." oninput="searchClients(this.value)">
+      </div>
+    </div>
+
+    <div class="clients-table" style="margin-top:16px">
+      <div class="clients-header">
+        <div>Client</div>
+        <div>Pieces/Mo</div>
+        <div>Primary AM</div>
+        <div>Statics</div>
+        <div>Motion</div>
+        <div>Reels VE</div>
+        <div>AI Reels</div>
+      </div>
+
+      <!-- Pod 1 Clients -->
+      <div class="client-row" data-pod="Pod 1" data-search="amr gaafar sama el masry"><div class="client-name">Amr Gaafar<small>Medical / Dental</small></div><div><span class="pieces-num" style="color:var(--pod1)">14</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="bassem dental yasmin hisham"><div class="client-name">Bassem Dental<small>Dental</small></div><div><span class="pieces-num" style="color:var(--pod1)">16</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val has-val">8</div><div class="type-val has-val">4</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="be in health shaimaa ghareeb"><div class="client-name">Be in Health<small>Health & Wellness</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="cairo gourmet yasmin hisham"><div class="client-name">Cairo Gourmet<small>Food & Beverage</small></div><div><span class="pieces-num" style="color:var(--pod1)">15</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">9</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="chill app yasmin hisham"><div class="client-name">Chill App<small>App / Tech</small></div><div><span class="pieces-num" style="color:var(--pod1)">14</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="house of braces sama el masry"><div class="client-name">House of Braces<small>Dental / Medical</small></div><div><span class="pieces-num" style="color:var(--pod1)">16</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val has-val">12</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="sgh riyadh rowan ehab"><div class="client-name">SGH Riyadh<small>Video Editing Reels Only</small></div><div><span class="pieces-num" style="color:var(--pod1)">60</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">20</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="doaa hamdy latifa"><div class="client-name">Doaa Hamdy<small>Medical / Personal Brand</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val">—</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="nassef ent sama el masry"><div class="client-name">Nassef ENT<small>Medical / ENT</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val">—</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="bareeq clinics yasmin hisham"><div class="client-name">Bareeq Clinics<small>Medical / Clinic</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
+      <div class="client-row" data-pod="Pod 1" data-search="sgh riyadh statics rowan ehab"><div class="client-name">SGH Riyadh<small>Statics Only</small></div><div><span class="pieces-num" style="color:var(--pod1)">100</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val has-val">100</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
+
+      <!-- Pod 2 Clients -->
+      <div class="client-row" data-pod="Pod 2" data-search="al-alem dental rowan ehab"><div class="client-name">Al-Alem Dental<small>Dental</small></div><div><span class="pieces-num" style="color:#A78BFA">16</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val has-val">4</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="alturki holding sama el masry"><div class="client-name">Alturki Holding<small>Corporate / Holding</small></div><div><span class="pieces-num" style="color:#A78BFA">12</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">12</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="amira badawy shaimaa ghareeb"><div class="client-name">Amira Badawy<small>Personal Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">14</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">10</div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="ashraf abou ali sama el masry"><div class="client-name">Ashraf Abou Ali<small>Personal Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">14</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">10</div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="gddc yasmin hisham"><div class="client-name">GDDC<small>Medical / Clinic</small></div><div><span class="pieces-num" style="color:#A78BFA">16</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">8</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="iris eye hospital latifa"><div class="client-name">IRIS Eye Hospital<small>Medical / Eye</small></div><div><span class="pieces-num" style="color:#A78BFA">16</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">6</div><div class="type-val has-val">6</div><div class="type-val has-val">4</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="perfect dental care latifa"><div class="client-name">Perfect Dental Care<small>Dental</small></div><div><span class="pieces-num" style="color:#A78BFA">10</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">10</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="lasik plus rowaida mohamed"><div class="client-name">LASIK Plus<small>Medical / Eye</small></div><div><span class="pieces-num" style="color:#A78BFA">9</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">9</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="dr. mohamed assem latifa"><div class="client-name">Dr. Mohamed Assem<small>Medical / Personal Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">18</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">12</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="madina libya icsi yasmin hisham"><div class="client-name">Madina Libya - ICSI<small>Medical</small></div><div><span class="pieces-num" style="color:#A78BFA">18</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">12</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="sapphire smiles shaimaa yasmin"><div class="client-name">Sapphire Smiles<small>Dental</small></div><div><span class="pieces-num" style="color:#A78BFA">50</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Shaimaa / Yasmin</div></div><div class="type-val has-val">25</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">25</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="sgh madinah rowaida mohamed"><div class="client-name">SGH Madinah<small>Medical</small></div><div><span class="pieces-num" style="color:#A78BFA">40</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">10</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">30</div></div>
+      <div class="client-row" data-pod="Pod 2" data-search="ashtoukhey sama el masry"><div class="client-name">Ashtoukhey<small>Retail / Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">10</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">10</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
+
+      <!-- Pod 3 Clients -->
+      <div class="client-row" data-pod="Pod 3" data-search="aurooj rowaida mohamed"><div class="client-name">Aurooj<small>Brand / Lifestyle</small></div><div><span class="pieces-num" style="color:#34D399">12</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">8</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">4</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="esawy latifa"><div class="client-name">Esawy<small>Medical / Dental</small></div><div><span class="pieces-num" style="color:#34D399">15</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">3</div><div class="type-val has-val">3</div><div class="type-val">—</div><div class="type-val has-val">9</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="heshmat dental rowaida"><div class="client-name">Heshmat Dental<small>Dental</small></div><div><span class="pieces-num" style="color:#34D399">10</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="isos rowaida"><div class="client-name">ISOS<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">6</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="royal dental rowaida"><div class="client-name">Royal Dental<small>Dental</small></div><div><span class="pieces-num" style="color:#34D399">6</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="kuc hospital latifa"><div class="client-name">KUC Hospital<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">12</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val">—</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="madina hospital shaimaa ghareeb"><div class="client-name">Madina Hospital<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">12</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">6</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="okba ibn nafaa hospital shaimaa"><div class="client-name">Okba Ibn Nafaa Hospital<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">17</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">12</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">5</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="rsc ksa sama el masry"><div class="client-name">RSC - KSA<small>Healthcare / KSA</small></div><div><span class="pieces-num" style="color:#34D399">14</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="rsc uae sama el masry"><div class="client-name">RSC - UAE<small>Healthcare / UAE</small></div><div><span class="pieces-num" style="color:#34D399">14</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="dar el-zokora kids shaimaa"><div class="client-name">Dar El-Zokora Kids<small>Pediatric / Kids</small></div><div><span class="pieces-num" style="color:#34D399">8</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">2</div><div class="type-val has-val">2</div><div class="type-val has-val">4</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="revita latifa"><div class="client-name">Revita<small>Health / Wellness</small></div><div><span class="pieces-num" style="color:#34D399">15</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">12</div><div class="type-val has-val">3</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="dar el-zokora shaimaa"><div class="client-name">Dar El-Zokora<small>Medical / General</small></div><div><span class="pieces-num" style="color:#34D399">22</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">8</div><div class="type-val has-val">6</div><div class="type-val has-val">8</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="scd spanish center dubai rowaida"><div class="client-name">SCD - Spanish Center Dubai<small>Education / Dubai</small></div><div><span class="pieces-num" style="color:#34D399">14</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="osama ghattas shaimaa"><div class="client-name">Osama Ghattas<small>Medical / Personal Brand</small></div><div><span class="pieces-num" style="color:#34D399">20</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">20</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
+      <div class="client-row" data-pod="Pod 3" data-search="sgh riyadh ai reels rowan ehab"><div class="client-name">SGH Riyadh<small>AI Reels Only</small></div><div><span class="pieces-num" style="color:#34D399">60</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">40</div></div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    el.classList.add('active');
+  }
+
+  let currentPod = 'all';
+  let currentSearch = '';
+
+  function filterPod(pod, btn) {
+    currentPod = pod;
+    document.querySelectorAll('.pod-btn').forEach(b => {
+      b.className = 'pod-btn';
+    });
+    if (pod === 'all') btn.className = 'pod-btn active-all';
+    else if (pod === 'Pod 1') btn.className = 'pod-btn active-p1';
+    else if (pod === 'Pod 2') btn.className = 'pod-btn active-p2';
+    else if (pod === 'Pod 3') btn.className = 'pod-btn active-p3';
+    applyFilters();
+  }
+
+  function searchClients(val) {
+    currentSearch = val.toLowerCase();
+    applyFilters();
+  }
+
+  function applyFilters() {
+    document.querySelectorAll('.client-row').forEach((row, i) => {
+      const podMatch = currentPod === 'all' || row.dataset.pod === currentPod;
+      const searchMatch = !currentSearch || row.dataset.search.includes(currentSearch) || row.querySelector('.client-name').textContent.toLowerCase().includes(currentSearch);
+      row.classList.toggle('hidden', !(podMatch && searchMatch));
+      if (!(row.classList.contains('hidden'))) {
+        row.style.animationDelay = (i * 0.03) + 's';
+      }
+    });
+  }
+</script>
+</body>
+</html>

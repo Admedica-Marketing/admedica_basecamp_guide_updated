@@ -2,853 +2,859 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pod Staffing & Client Mapping</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --pod1: #FF6B35;
-    --pod2: #7C3AED;
-    --pod3: #059669;
-    --shared: #0EA5E9;
-    --bg: #0A0A0F;
-    --surface: #12121A;
-    --surface2: #1A1A28;
-    --border: rgba(255,255,255,0.07);
-    --text: #F0F0FF;
-    --muted: #6B6B8A;
-  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'DM Mono', monospace;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
+    font-family: 'Inter', sans-serif;
+    background: #f5f5f5;
+    color: #1a1a1a;
   }
 
-  /* Animated grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: 
-      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+  .page {
+    width: 794px;
+    margin: 32px auto;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   }
 
-  /* Glow orbs */
-  .orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.15;
-    pointer-events: none;
-    z-index: 0;
-  }
-  .orb-1 { width: 600px; height: 600px; background: var(--pod1); top: -200px; left: -200px; animation: drift1 20s ease-in-out infinite; }
-  .orb-2 { width: 500px; height: 500px; background: var(--pod2); bottom: -100px; right: -100px; animation: drift2 25s ease-in-out infinite; }
-  .orb-3 { width: 400px; height: 400px; background: var(--pod3); top: 40%; left: 40%; animation: drift3 18s ease-in-out infinite; }
-
-  @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
-  @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-50px,30px)} }
-  @keyframes drift3 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(40px,-30px)} 66%{transform:translate(-30px,20px)} }
-
-  /* Header */
-  header {
-    position: relative;
-    z-index: 10;
-    padding: 60px 60px 40px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .header-top {
+  /* COVER */
+  .cover {
+    background: #1a1a2e;
+    padding: 80px 60px;
+    min-height: 340px;
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
     justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
   }
 
-  .badge {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    padding: 4px 12px;
-    border-radius: 2px;
-    margin-bottom: 16px;
-    display: inline-block;
-  }
+  .cover-top { display: flex; justify-content: space-between; align-items: flex-start; }
 
-  h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(32px, 5vw, 64px);
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.03em;
-  }
-
-  h1 span {
-    display: block;
-    background: linear-gradient(135deg, var(--pod1), var(--pod2), var(--pod3));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .stats-row {
-    display: flex;
-    gap: 0;
-    margin-top: 40px;
-  }
-
-  .stat {
-    flex: 1;
-    padding: 20px 24px;
-    border-right: 1px solid var(--border);
-    border-top: 1px solid var(--border);
-  }
-  .stat:last-child { border-right: none; }
-
-  .stat-value {
-    font-family: 'Syne', sans-serif;
-    font-size: 36px;
-    font-weight: 800;
-    line-height: 1;
-  }
-  .stat-label {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  /* Nav tabs */
-  .nav {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    gap: 0;
-    padding: 0 60px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-tab {
-    padding: 18px 28px;
-    font-family: 'Syne', sans-serif;
+  .brand {
     font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    color: var(--muted);
-    transition: all 0.2s;
-    text-transform: uppercase;
-    margin-bottom: -1px;
-  }
-
-  .nav-tab:hover { color: var(--text); }
-  .nav-tab.active { color: var(--text); border-bottom-color: var(--text); }
-
-  /* Main content */
-  main {
-    position: relative;
-    z-index: 10;
-    padding: 40px 60px 80px;
-  }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* Section heading */
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.25em;
+    letter-spacing: 3px;
+    color: #ffffff60;
     text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
   }
 
-  /* Pod cards grid */
-  .pods-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 2px;
+  .cover-badge {
+    background: #303FB420;
+    border: 1px solid #303FB450;
+    color: #8fa8ff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  .cover-title {
+    font-size: 38px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    margin-top: 48px;
+  }
+
+  .cover-title span { color: #D6226B; }
+
+  .cover-sub {
+    font-size: 14px;
+    color: #ffffff70;
+    margin-top: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .cover-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid #ffffff15;
+  }
+
+  .cover-footer-text {
+    font-size: 12px;
+    color: #ffffff40;
+    letter-spacing: 1px;
+  }
+
+  /* BODY */
+  .body { padding: 48px 60px; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #303FB4;
+    margin-bottom: 24px;
+    margin-top: 48px;
+  }
+
+  .section-label:first-child { margin-top: 0; }
+
+  /* HOW TO READ */
+  .how-to {
+    background: #f0f2ff;
+    border: 1px solid #d0d8ff;
+    border-radius: 10px;
+    padding: 20px 24px;
     margin-bottom: 40px;
   }
 
-  .pod-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    animation: fadeUp 0.5s ease both;
+  .how-to-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
   }
 
-  @keyframes fadeUp {
-    from { opacity:0; transform: translateY(20px); }
-    to { opacity:1; transform: translateY(0); }
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
   }
 
-  .pod-card:nth-child(2) { animation-delay: 0.1s; }
-  .pod-card:nth-child(3) { animation-delay: 0.2s; }
-
-  .pod-header {
-    padding: 20px 24px;
+  .legend-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
+    gap: 8px;
+    font-size: 12px;
+    color: #555;
   }
 
-  .pod-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 800;
+  .legend-tag {
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  .legend-tag.blue  { background: #303FB4; }
+  .legend-tag.green { background: #2ecc71; }
+  .legend-tag.pink  { background: #D6226B; }
+
+  /* RULE CALLOUT */
+  .rule {
+    font-size: 11.5px;
+    background: #fff8e6;
+    border-left: 3px solid #f9a825;
+    border-radius: 0 6px 6px 0;
+    padding: 8px 14px;
+    margin: 6px 0 10px;
+    color: #6b4c00;
+    line-height: 1.5;
+  }
+  .rule strong { font-weight: 700; }
+
+  /* LIST BLOCK */
+  .list-block {
+    margin-bottom: 28px;
+    border: 1px solid #ebebeb;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .list-header {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
   }
 
-  .pod-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+  .list-header .icon { font-size: 15px; }
+
+  .list-header.content    { background: #303FB4; }
+  .list-header.design     { background: #7950f2; }
+  .list-header.multimedia { background: #D6226B; }
+  .list-header.adhoc      { background: #e67e22; color: #fff; }
+  .list-header.performance{ background: #1a7a4a; }
+  .list-header.revisions  { background: #c0392b; }
+  .list-header.printing   { background: #555; }
+  .list-header.newclient  { background: #0077b6; }
+
+  .task-list { padding: 8px 0; }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 20px;
+    font-size: 12.5px;
+    color: #333;
+    border-bottom: 1px solid #f5f5f5;
+  }
+
+  .task-item:last-child { border-bottom: none; }
+
+  .checkbox {
+    width: 15px;
+    height: 15px;
+    border: 1.5px solid #ccc;
+    border-radius: 3px;
     flex-shrink: 0;
   }
 
-  .pod-1 .pod-dot { background: var(--pod1); box-shadow: 0 0 12px var(--pod1); }
-  .pod-2 .pod-dot { background: var(--pod2); box-shadow: 0 0 12px var(--pod2); }
-  .pod-3 .pod-dot { background: var(--pod3); box-shadow: 0 0 12px var(--pod3); }
+  .task-name { flex: 1; font-family: monospace; font-size: 12px; color: #222; }
 
-  .pod-count {
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  /* Member rows */
-  .member-row {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 24px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  .member-row:last-child { border-bottom: none; }
-  .member-row:hover { background: var(--surface2); }
-
-  .member-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .member-title {
+  .sub-label {
     font-size: 10px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .level-badge {
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 2px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .level-ACD { background: rgba(255,107,53,0.15); color: var(--pod1); border: 1px solid rgba(255,107,53,0.3); }
-  .level-Lead { background: rgba(124,58,237,0.15); color: #A78BFA; border: 1px solid rgba(124,58,237,0.3); }
-  .level-Senior { background: rgba(5,150,105,0.15); color: #34D399; border: 1px solid rgba(5,150,105,0.3); }
-  .level-Mid { background: rgba(14,165,233,0.15); color: #38BDF8; border: 1px solid rgba(14,165,233,0.3); }
-  .level-Junior { background: rgba(255,255,255,0.07); color: var(--muted); border: 1px solid var(--border); }
-  .level-Intern { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
-  .level-Director { background: rgba(239,68,68,0.15); color: #F87171; border: 1px solid rgba(239,68,68,0.3); }
-  .level-Head { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
-  .level-Manager { background: rgba(139,92,246,0.15); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.3); }
-  .level-Executive { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.3); }
-
-  .func-tag {
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    width: 70px;
-    text-align: right;
-  }
-
-  /* Shared teams */
-  .shared-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2px;
-    margin-top: 2px;
-  }
-
-  .shared-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    overflow: hidden;
-  }
-
-  .shared-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .shared-icon {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--shared);
-    box-shadow: 0 0 8px var(--shared);
-  }
-
-  .shared-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
+    color: #999;
+    padding: 10px 20px 4px;
   }
 
-  /* Client mapping */
-  .clients-header {
-    display: grid;
-    grid-template-columns: 1fr 90px 120px 80px 80px 80px 80px;
-    gap: 8px;
-    padding: 10px 20px;
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-    border-bottom: 1px solid var(--border);
+  .divider {
+    height: 1px;
+    background: #f0f0f0;
+    margin: 4px 0;
   }
 
-  .client-row {
-    display: grid;
-    grid-template-columns: 1fr 90px 120px 80px 80px 80px 80px;
-    gap: 8px;
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-    transition: background 0.15s;
-    animation: fadeUp 0.4s ease both;
-  }
-
-  .client-row:hover { background: var(--surface2); }
-  .client-row:last-child { border-bottom: none; }
-
-  .client-name {
-    font-size: 13px;
-    font-weight: 500;
-  }
-
-  .client-name small {
-    display: block;
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .pieces-bar {
-    position: relative;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .pieces-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    min-width: 30px;
-  }
-
-  .pod-pill {
-    font-size: 9px;
-    padding: 3px 8px;
-    border-radius: 2px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .pod-pill.p1 { background: rgba(255,107,53,0.15); color: var(--pod1); border: 1px solid rgba(255,107,53,0.3); }
-  .pod-pill.p2 { background: rgba(124,58,237,0.15); color: #A78BFA; border: 1px solid rgba(124,58,237,0.3); }
-  .pod-pill.p3 { background: rgba(5,150,105,0.15); color: #34D399; border: 1px solid rgba(5,150,105,0.3); }
-
-  .am-name { font-size: 12px; color: var(--muted); }
-
-  .type-val {
-    font-size: 12px;
-    text-align: right;
-    color: var(--muted);
-  }
-  .type-val.has-val { color: var(--text); }
-
-  /* Pod selector tabs */
-  .pod-filter {
-    display: flex;
-    gap: 2px;
-    margin-bottom: 16px;
-  }
-
-  .pod-btn {
-    padding: 8px 18px;
-    font-family: 'Syne', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    cursor: pointer;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    transition: all 0.2s;
-  }
-
-  .pod-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-  .pod-btn.active-p1 { background: rgba(255,107,53,0.15); color: var(--pod1); border-color: rgba(255,107,53,0.4); }
-  .pod-btn.active-p2 { background: rgba(124,58,237,0.15); color: #A78BFA; border-color: rgba(124,58,237,0.4); }
-  .pod-btn.active-p3 { background: rgba(5,150,105,0.15); color: #34D399; border-color: rgba(5,150,105,0.4); }
-  .pod-btn.active-all { background: rgba(255,255,255,0.08); color: var(--text); border-color: rgba(255,255,255,0.2); }
-
-  /* Totals bar */
-  .totals-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2px;
-    margin-bottom: 2px;
-  }
-
-  .total-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
+  /* EXAMPLE SECTION */
+  .example-banner {
+    background: linear-gradient(135deg, #1a1a2e, #2d3561);
+    border-radius: 10px;
     padding: 20px 24px;
-  }
-
-  .total-pod-label {
-    font-family: 'Syne', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 28px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
   }
 
-  .total-breakdown {
+  .example-banner-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #8fa8ff;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .example-banner-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .example-banner-sub {
+    font-size: 12px;
+    color: #ffffff60;
+    margin-top: 4px;
+  }
+
+  .package-tag {
+    background: #303FB420;
+    border: 1px solid #303FB440;
+    color: #8fa8ff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  /* PAGE BREAK */
+  .page-break {
+    border: none;
+    border-top: 2px dashed #ebebeb;
+    margin: 48px 0;
+  }
+
+  /* RECOMMENDATIONS SECTION */
+  .recs-banner {
+    background: #D6226B;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+
+  .recs-banner-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #ffffff80;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .recs-banner-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .recs-banner-sub {
+    font-size: 12.5px;
+    color: #ffffff80;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .rec-item {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+    align-items: flex-start;
   }
 
-  .total-item {
+  .rec-item:last-child { border-bottom: none; }
+
+  .rec-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: #303FB4;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .rec-num.pink { background: #D6226B; }
+  .rec-num.orange { background: #e67e22; }
+
+  .rec-content { flex: 1; }
+
+  .rec-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 3px;
+  }
+
+  .rec-body {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.55;
+  }
+
+  .rec-body code {
+    background: #f0f2ff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #303FB4;
+  }
+
+  .rec-body code.bad {
+    background: #fdecea;
+    color: #b71c1c;
+  }
+
+  .rec-body code.good {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
+
+  .chip {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+
+  .chip-new      { background: #e8f5e9; color: #1b5e20; }
+  .chip-changed  { background: #fff3e0; color: #e65100; }
+  .chip-fix      { background: #fdecea; color: #b71c1c; }
+  .chip-critical { background: #b71c1c; color: #fff; }
+  .chip-high     { background: #e65100; color: #fff; }
+  .chip-medium   { background: #f9a825; color: #5a3e00; }
+
+  /* ERROR SECTION */
+  .errors-banner {
+    background: #1a1a2e;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+  .errors-banner-eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    color: #ffffff70; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .errors-banner-title { font-size: 18px; font-weight: 800; color: #fff; }
+  .errors-banner-sub { font-size: 12.5px; color: #ffffff70; margin-top: 4px; line-height: 1.5; }
+
+  .err-item {
+    display: flex; gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+    align-items: flex-start;
+  }
+  .err-item:last-child { border-bottom: none; }
+
+  .err-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #1a1a2e; color: #fff;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+
+  .err-content { flex: 1; }
+  .err-title { font-size: 13px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px; }
+  .err-body  { font-size: 12px; color: #555; line-height: 1.55; }
+
+  .err-body code {
+    background: #f0f2ff; padding: 1px 5px; border-radius: 3px;
+    font-family: monospace; font-size: 11px; color: #303FB4;
+  }
+  .err-body code.bad  { background: #fdecea; color: #b71c1c; }
+  .err-body code.good { background: #e8f5e9; color: #1b5e20; }
+
+  .err-examples {
+    display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;
+  }
+  .err-ex {
+    flex: 1; min-width: 200px; border-radius: 6px;
+    padding: 8px 12px; font-family: monospace; font-size: 11px; line-height: 1.6;
+  }
+  .err-ex.bad  { background: #fdecea; border-left: 3px solid #e53935; color: #7f1d1d; }
+  .err-ex.good { background: #e8f5e9; border-left: 3px solid #43a047; color: #1b5e20; }
+  .err-ex-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.6; margin-bottom: 4px; }
+
+  /* FOOTER */
+  .doc-footer {
+    background: #f8f9ff;
+    border-top: 1px solid #ebebeb;
+    padding: 16px 60px;
     display: flex;
     justify-content: space-between;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .total-item .val {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    color: var(--text);
-    font-size: 13px;
-  }
-
-  .total-pieces {
-    font-family: 'Syne', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 8px;
-  }
-
-  /* Clients table container */
-  .clients-table {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    overflow: hidden;
-  }
-
-  /* Search box */
-  .search-box {
-    display: flex;
     align-items: center;
-    gap: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    width: 100%;
-    max-width: 400px;
   }
 
-  .search-box input {
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    width: 100%;
-    caret-color: var(--pod1);
-  }
-
-  .search-box input::placeholder { color: var(--muted); }
-
-  .search-icon { color: var(--muted); font-size: 14px; }
-
-  /* Hidden rows */
-  .client-row.hidden { display: none; }
+  .doc-footer-text { font-size: 11px; color: #aaa; }
+  .doc-footer-brand { font-size: 11px; font-weight: 700; color: #303FB4; letter-spacing: 1px; }
 </style>
 </head>
 <body>
 
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div class="orb orb-3"></div>
+<div class="page">
 
-<header>
-  <div class="header-top">
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-top">
+      <div class="brand">AdMedica</div>
+      <div class="cover-badge">INTERNAL &#8212; CONFIDENTIAL</div>
+    </div>
     <div>
-      <div class="badge">Creative Agency · Org Structure</div>
-      <h1>Pod Staffing<br><span>& Client Mapping</span></h1>
+      <div class="cover-title">Basecamp Tasks<br><span>Structure &amp; Template</span></div>
+      <div class="cover-sub">Updated todolist naming, task conventions &amp; a model example<br>for consistent project setup across all pods.</div>
+    </div>
+    <div class="cover-footer">
+      <div class="cover-footer-text">OPERATIONS &#8212; MONA LOTFY</div>
+      <div class="cover-footer-text">JUNE 2026</div>
     </div>
   </div>
-  <div class="stats-row">
-    <div class="stat">
-      <div class="stat-value" style="color:var(--pod1)">59</div>
-      <div class="stat-label">Total Staff</div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- HOW TO READ -->
+    <div class="how-to">
+      <div class="how-to-title">How to read this template</div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-tag blue">[Month YYYY]</span> Replace with full month &amp; year, e.g. June 2026</div>
+        <div class="legend-item"><span class="legend-tag blue">[Q]</span> Replace with quantity number</div>
+        <div class="legend-item"><span class="legend-tag green">[#]</span> Revision round number (R0, R1, R2...)</div>
+        <div class="legend-item"><span class="legend-tag">-</span> Separator is always a hyphen - never an em-dash</div>
+        <div class="legend-item"><span class="legend-tag pink">AdHoc</span> Unplanned / urgent requests go in the SM AdHoc list</div>
+      </div>
     </div>
-    <div class="stat">
-      <div class="stat-value" style="color:var(--pod2)">45</div>
-      <div class="stat-label">Active Clients</div>
+
+    <!-- TEMPLATE SECTION -->
+    <div class="section-label">&#8212; Standard Template</div>
+
+    <!-- CONTENT -->
+    <div class="list-block">
+      <div class="list-header content"><span class="icon">&#128203;</span> SM Content - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Topics - [Month YYYY]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Shooting Ideas - [Month YYYY]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Caption - Concepts for Static | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Caption - Concepts for Reels | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Caption - Concepts for Campaign | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Stories - Copy &amp; Visuals | x[Q]</div></div>
+      </div>
     </div>
-    <div class="stat">
-      <div class="stat-value" style="color:var(--pod3)">723</div>
-      <div class="stat-label">Pieces / Month</div>
+
+    <!-- DESIGN -->
+    <div class="list-block">
+      <div class="list-header design"><span class="icon">&#128203;</span> SM Design - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Static - Calendar Designs | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Static - B&amp;A Cases | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Offers - Static - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Reel Visuals - AI Reel Scenes | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Reel Visuals - B&amp;A Cases Retouching | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Thumbnail - Doctor Reels | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Thumbnail - AI Reels | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Thumbnail - Doctor &amp; AI Reels | x[Q]</div></div>
+      </div>
     </div>
-    <div class="stat">
-      <div class="stat-value" style="color:var(--shared)">3</div>
-      <div class="stat-label">Creative Pods</div>
+
+    <!-- MULTIMEDIA -->
+    <div class="list-block">
+      <div class="list-header multimedia"><span class="icon">&#128203;</span> SM Multimedia - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AI Reel | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Video Edit Reel | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">B&amp;A Reel | x[Q]</div></div>
+      </div>
+      <div style="padding: 8px 20px 12px; font-size: 11px; color: #888; font-style: italic; border-top: 1px solid #f0f0f0; line-height: 1.5;">
+        &#8505; Each multimedia task may have sub-tasks (e.g. Animations, First Cut, Finalizing) that are assigned individually in Basecamp but do not appear as separate rows in the main report. These sub-tasks are visible in each person's assignment list and are tracked in staff workload data.
+      </div>
     </div>
+
+    <!-- ADHOC -->
+    <div class="list-block">
+      <div class="list-header adhoc"><span class="icon">&#9889;</span> SM AdHoc - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AdHoc - Static - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AdHoc - Static - Urgent: [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AdHoc - Thumbnail - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AdHoc - Caption - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AdHoc - Caption - Urgent: [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AdHoc - AI Reel - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">AdHoc - Video Edit Reel - [Brief Description] | x[Q]</div></div>
+      </div>
+    </div>
+
+    <!-- REVISIONS -->
+    <div class="list-block">
+      <div class="list-header revisions"><span class="icon">&#128203;</span> SM Revisions - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - Static - [Brief Description] | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - Reel Visuals - [Brief Description] | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - AI Reel | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - Video Edit Reel - [Brief Description] | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - B&amp;A Reel | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - Caption - [Brief Description] | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - Topics - [Brief Description] | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - Shooting Ideas - [Brief Description] | x[Q] - R[#]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - AdHoc - [Type] - [Brief Description] | x[Q] - R[#]</div></div>
+      </div>
+    </div>
+
+    <!-- PRINTING -->
+    <div class="list-block">
+      <div class="list-header printing"><span class="icon">&#128203;</span> Printing - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Print - Outdoor - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Print - Business Card - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Print - QR Code - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Print - Prescription - [Brief Description] | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">REV - Print - [Type] - [Brief Description] | x[Q] - R[#]</div></div>
+      </div>
+    </div>
+
+    <!-- NOTE FOR ACCOUNT MANAGERS -->
+    <div style="background:#fff8e6; border:1px solid #f9a825; border-radius:10px; padding:16px 22px; margin-bottom:28px;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#b37a00; margin-bottom:6px;">&#9888; Note for Account Managers</div>
+      <div style="font-size:12.5px; color:#5a3e00; line-height:1.6;">There is no <strong>SM New Client</strong> list. When onboarding a new client, all tasks go into the corresponding discipline lists for that month: design setup tasks in <strong>SM Design</strong>, content strategy tasks in <strong>SM Content</strong>, and so on. Use the same task naming format as any other task. This keeps all reporting consistent across new and existing clients.</div>
+    </div>
+
+    <!-- NEW CLIENT EXAMPLES -->
+    <div class="section-label">&#8212; New Client Task Examples</div>
+
+    <div style="font-size:12.5px; color:#555; line-height:1.6; margin-bottom:20px;">New client onboarding tasks follow the same naming format as all other tasks. Place them in the correct discipline list based on what the work involves &#8212; there is no separate "new client" list.</div>
+
+    <div class="list-block">
+      <div class="list-header content"><span class="icon">&#128203;</span> SM Content - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="sub-label">Onboarding &amp; Strategy</div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Content Strategy - [Month YYYY]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Optimization - Content Brief | x[Q]</div></div>
+      </div>
+    </div>
+
+    <div class="list-block">
+      <div class="list-header design"><span class="icon">&#128203;</span> SM Design - [Month YYYY]</div>
+      <div class="task-list">
+        <div class="sub-label">Onboarding &amp; Branding</div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Branding - Digital Guidelines | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Branding - Profile &amp; Cover Design | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Branding - Highlight Covers | x[Q]</div></div>
+        <div class="task-item"><div class="checkbox"></div><div class="task-name">Optimization - Design Assets | x[Q]</div></div>
+      </div>
+    </div>
+
+    <hr class="page-break">
+
+    <!-- RECOMMENDATIONS SECTION -->
+    <div class="section-label">&#8212; What Changed &amp; What to Fix</div>
+
+    <div class="recs-banner">
+      <div class="recs-banner-eyebrow">&#9888;&#65039; Updated June 2026</div>
+      <div class="recs-banner-title">Key Changes from the Previous Template</div>
+      <div class="recs-banner-sub">These are the rules that changed since April 2026, plus issues found in live Basecamp data that the whole team needs to be aware of.</div>
+    </div>
+
+    <!-- REC LIST -->
+    <div class="rec-item">
+      <div class="rec-num">1</div>
+      <div class="rec-content">
+        <div class="chip chip-changed">Changed</div>
+        <div class="rec-title">AdHoc tasks now have their own list</div>
+        <div class="rec-body">All unplanned / urgent requests go into <code>SM AdHoc - [Month YYYY]</code>. Do not add AdHoc tasks inside SM Content, SM Design, or SM Multimedia. This keeps the monthly lists clean and makes AdHoc volume trackable separately.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num">2</div>
+      <div class="rec-content">
+        <div class="chip chip-changed">Changed</div>
+        <div class="rec-title">Separator is a hyphen ( - ), not an em-dash ( &#8212; )</div>
+        <div class="rec-body">Every separator in task names and list names uses a plain hyphen with spaces on both sides. No more em-dashes. Examples: <code class="good">REV - Static - Calendar Designs | x4 - R1</code> not <code class="bad">REV &#8212; Static &#8212; Calendar Designs | x4 &#8212; R1</code></div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num pink">3</div>
+      <div class="rec-content">
+        <div class="chip chip-fix">Fix Required</div>
+        <div class="rec-title">Never paste task names from Google Docs, Notion, or other rich text tools</div>
+        <div class="rec-body">Copy-pasting from those sources introduces invisible characters (like a hidden "Word Joiner" before the text) that make tasks unsearchable. Always type task names directly in Basecamp, or paste as plain text. This has already caused 7+ Caption tasks to disappear from searches in the current data.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num pink">4</div>
+      <div class="rec-content">
+        <div class="chip chip-fix">Fix Required</div>
+        <div class="rec-title">No trailing line breaks in task names</div>
+        <div class="rec-body">106 tasks currently have an invisible newline character at the end of their title from copy-pasting. Always check that the task name is clean before saving. This breaks grouping and filters in every report.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num">5</div>
+      <div class="rec-content">
+        <div class="chip chip-changed">Changed</div>
+        <div class="rec-title">List names: always include the full year (not "26")</div>
+        <div class="rec-body">List names must use the full 4-digit year: <code class="good">SM Content - June 2026</code> not <code class="bad">SM Content - June 26</code>. Also no double spaces, no trailing spaces, no non-breaking spaces. One space on each side of the hyphen, nothing else.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num">6</div>
+      <div class="rec-content">
+        <div class="chip chip-changed">Changed</div>
+        <div class="rec-title">Caption tasks renamed (from "Reels - Concepts &amp; Captions" to "Caption - Concepts for Reels")</div>
+        <div class="rec-body">The Content list now uses <code>Caption - Concepts for Static | x[Q]</code> and <code>Caption - Concepts for Reels | x[Q]</code> instead of the old combined "Concepts &amp; Captions" format. This keeps the task type consistent with the rest of the system.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num">7</div>
+      <div class="rec-content">
+        <div class="chip chip-new">New</div>
+        <div class="rec-title">Printing tasks go in their own list</div>
+        <div class="rec-body">Any offline / print work goes in <code>Printing - [Month YYYY]</code>. Tasks inside use the format <code class="good">Print - [Type] - [Brief Description] | x[Q]</code> where [Type] is one of: Outdoor, Business Card, QR Code, Prescription. Do not use "AdHoc - Print" &#8212; the Printing list already implies it's non-SM. Not "Printings", not "Printing - 2026" without a month.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num">8</div>
+      <div class="rec-content">
+        <div class="chip chip-fix">Fix Required</div>
+        <div class="rec-title">Discipline must always match the task type &#8212; no "General"</div>
+        <div class="rec-body">When creating a task, the Discipline field must reflect what the work actually is: Design, Content, Multimedia, or Revisions. "General" is not a valid discipline. For AdHoc tasks, set the discipline based on what the task involves: AdHoc - Static = Design, AdHoc - Caption = Content, AdHoc - Video Edit = Multimedia.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num">9</div>
+      <div class="rec-content">
+        <div class="chip chip-new">New</div>
+        <div class="rec-title">Partial correction rounds: R[#]-[sub] for internal re-deliveries</div>
+        <div class="rec-body">When a deliverable within a round was incomplete or incorrect due to an internal error (not a new client request), name it as <code class="good">REV - [Type] - [Description] | x[Q] - R1-1</code> where the second number is the partial delivery sequence. Example: <code>REV - AI Reel | x2 - R1-1</code> means the first partial correction within Round 1. Similarly, <code>R0</code> is used for an internal edit made before any client round officially started. Neither R0 nor R[n]-[m] count toward the client revision count &#8212; they track internal accountability only.</div>
+      </div>
+    </div>
+
+    <div class="rec-item">
+      <div class="rec-num">10</div>
+      <div class="rec-content">
+        <div class="chip chip-new">New</div>
+        <div class="rec-title">Multimedia sub-tasks: stages are assigned individually but not in the main report</div>
+        <div class="rec-body">Tasks like AI Reel and Video Edit Reel may have sub-tasks representing production stages (e.g. Animations, First Cut, Finalizing). These appear in each team member's personal assignments and are counted in staff workload, but they are linked to the parent task and do not appear as separate rows in the main report. This is expected behavior &#8212; do not duplicate them as standalone tasks in the main list.</div>
+      </div>
+    </div>
+
+    <hr class="page-break">
+
+    <!-- FREQUENT ERRORS SECTION -->
+    <div class="section-label">&#8212; Frequent Errors Found in Live Data</div>
+
+    <div class="errors-banner">
+      <div class="errors-banner-eyebrow">&#9888; Based on Basecamp Audit &#8212; June 2026</div>
+      <div class="errors-banner-title">What the Team Is Getting Wrong</div>
+      <div class="errors-banner-sub">These are real patterns found across 821 tasks in the live Basecamp data. Each one breaks search, grouping, or reporting accuracy.</div>
+    </div>
+
+    <!-- ERROR 1 -->
+    <div class="err-item">
+      <div class="err-num">1</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-critical">Critical</span></div>
+        <div class="err-title">Pasting task names from Google Docs, Notion, or WhatsApp</div>
+        <div class="err-body">This is the single most damaging habit. Rich text sources inject invisible Unicode characters (Word Joiner <code>U+2060</code>, Zero Width Space <code>U+200B</code>) that have no visible appearance but break everything. Tasks with these characters become completely unsearchable &#8212; a search for "Caption" will return zero results even if the task exists. Found in 7+ Caption tasks in the current data. <strong>Always type task names directly in Basecamp, or paste as plain text only.</strong></div>
+      </div>
+    </div>
+
+    <!-- ERROR 2 -->
+    <div class="err-item">
+      <div class="err-num">2</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-critical">Critical</span></div>
+        <div class="err-title">Trailing line breaks at the end of task names</div>
+        <div class="err-body">106 tasks currently end with an invisible newline character from copy-pasting. The task looks completely normal on screen but is treated as a different string by every filter, search, and grouping in the report. These tasks will never match their type, never group correctly, and inflate unknown categories. Always press backspace after pasting to make sure there is no extra line at the end of the task name.</div>
+      </div>
+    </div>
+
+    <!-- ERROR 3 -->
+    <div class="err-item">
+      <div class="err-num">3</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-critical">Critical</span></div>
+        <div class="err-title">Discipline set to "General" instead of the real discipline</div>
+        <div class="err-body">125 tasks are filed under "General" &#8212; a category that should not exist. Almost all of these are AdHoc tasks where the person creating the task did not set the discipline. The rule is simple: look at the task type inside the name and set accordingly.<br><br>
+          <code>AdHoc - Static</code> &#8594; Design &nbsp;&nbsp;
+          <code>AdHoc - Caption</code> &#8594; Content &nbsp;&nbsp;
+          <code>AdHoc - Video Edit Reel</code> &#8594; Multimedia<br><br>
+          "General" is not a valid discipline. 125 tasks worth of work is currently invisible to all discipline-level reports because of this.
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR 4 -->
+    <div class="err-item">
+      <div class="err-num">4</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-high">High</span></div>
+        <div class="err-title">Task type set to "Other"</div>
+        <div class="err-body">"Other" is not a real task type &#8212; it means the task was never properly classified. 17 tasks currently use it. 9 of them are Caption tasks that were simply miscategorized. The remaining 8 need individual review. Going forward: if a task doesn't fit any known type, check the title again. If it genuinely represents a new work type, flag it for the ops lead to add to the standard list &#8212; do not default to "Other."</div>
+      </div>
+    </div>
+
+    <!-- ERROR 5 -->
+    <div class="err-item">
+      <div class="err-num">5</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-high">High</span></div>
+        <div class="err-title">Wrong list name format &#8212; 46 distinct list names found, should be fewer than 15</div>
+        <div class="err-body">List names are being created freehand by multiple people with no shared reference. Every variation creates a new isolated bucket in the report. Common violations found in live data:</div>
+        <div class="err-body" style="margin-top:8px;">
+          <code class="bad">SM AdHocs - June 2026</code> &#8594; plural "AdHocs" &nbsp;|&nbsp;
+          <code class="bad">AdHoc - June 2026</code> &#8594; missing "SM" prefix<br>
+          <code class="bad">SM Content &#8212;&nbsp;&nbsp;June 26</code> &#8594; em-dash + double space + 2-digit year<br>
+          <code class="bad">SM Designs - April 2026</code> &#8594; plural "Designs" &nbsp;|&nbsp;
+          <code class="bad">Printings - 2026</code> &#8594; plural, no month<br>
+          <code class="bad">Revisions&nbsp;</code> &#8594; no prefix, no date, trailing space<br><br>
+          <strong>Rule:</strong> Never create a new list without checking this template first. The only person who should create monthly lists is the ops lead at the start of each month.
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR 6 -->
+    <div class="err-item">
+      <div class="err-num">6</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-high">High</span></div>
+        <div class="err-title">Missing quantity, or "| x" with nothing after it</div>
+        <div class="err-body">Every deliverable task must include a quantity in the format <code>| x[Q]</code>. Two failure modes found: (1) no quantity at all &#8212; the quantity field is simply left empty; (2) the pipe and letter x are there but the number is missing (e.g. <code class="bad">Reel Visuals - B&amp;A Cases Retouching | x</code>). Both cases cause the task to be uncountable in all volume reports.</div>
+        <div class="err-examples">
+          <div class="err-ex bad"><div class="err-ex-label">&#x2715; Wrong</div>Static - Calendar Designs<br>Reel Visuals - B&amp;A Cases Retouching | x</div>
+          <div class="err-ex good"><div class="err-ex-label">&#x2713; Correct</div>Static - Calendar Designs | x4<br>Reel Visuals - B&amp;A Cases Retouching | x4</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR 7 -->
+    <div class="err-item">
+      <div class="err-num">7</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-high">High</span></div>
+        <div class="err-title">Inconsistent reel task type names</div>
+        <div class="err-body">Five overlapping reel type names are in use simultaneously, making it impossible to aggregate reel volume across projects. The valid types are <code class="good">Video Edit Reel</code>, <code class="good">AI Reel</code>, and <code class="good">B&amp;A Reel</code>. Using anything else creates a separate ungrouped bucket.</div>
+        <div class="err-examples">
+          <div class="err-ex bad"><div class="err-ex-label">&#x2715; Wrong (all found in live data)</div>Video Edit Reel - First Cut | x10<br>Reel | x4<br>Reels | x8<br>Video Edit | x5</div>
+          <div class="err-ex good"><div class="err-ex-label">&#x2713; Correct</div>Video Edit Reel | x10<br>Video Edit Reel | x4<br>Video Edit Reel | x8<br>Video Edit Reel | x5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR 8 -->
+    <div class="err-item">
+      <div class="err-num">8</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-high">High</span></div>
+        <div class="err-title">Print and outdoor tasks added to the wrong list</div>
+        <div class="err-body">Print work (outdoor signs, business cards, prescriptions, QR codes) is showing up in two wrong places: inside <strong>SM Design</strong> as "Static - Outdoor" tasks, and inside <strong>SM AdHoc</strong> as "AdHoc - Print" tasks. All print work belongs in <code>Printing - [Month YYYY]</code> using the format <code class="good">Print - [Type] - [Brief Description] | x[Q]</code>. This is the only way print volume is tracked separately from digital SM work.</div>
+      </div>
+    </div>
+
+    <!-- ERROR 9 -->
+    <div class="err-item">
+      <div class="err-num">9</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-medium">Medium</span></div>
+        <div class="err-title">Creating one-off custom lists for specific tasks</div>
+        <div class="err-body">Several non-standard lists were found created to house specific tasks that had no obvious home. Examples from live data: <code class="bad">Video Edit Reel</code>, <code class="bad">Video Edit - Finalizing</code>, <code class="bad">Video Edit - IG Splitting</code>, <code class="bad">Captions &amp; Thumbnails</code>, <code class="bad">New Layout\Template - Dr Profiles | x84</code>. All of these represent tasks that belong in the standard monthly lists (<code>SM Multimedia</code>, <code>SM Content</code>, <code>SM Design</code>). Creating a custom list isolates tasks from every aggregation, filter, and report that depends on the standard list names.</div>
+      </div>
+    </div>
+
+    <!-- ERROR 10 -->
+    <div class="err-item">
+      <div class="err-num">10</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-medium">Medium</span></div>
+        <div class="err-title">Quantity placed in the list name, not the task name</div>
+        <div class="err-body">One list was found named <code class="bad">New Layout\Template - Dr Profiles | x84</code> &#8212; the quantity belongs in the task title, not the list name. List names are category labels, not task descriptions. Putting a quantity or description in the list name makes it impossible to rename or reuse the list, breaks all list-name-based grouping, and means the quantity is invisible to the task-level report.</div>
+      </div>
+    </div>
+
+    <!-- ERROR 11 -->
+    <div class="err-item">
+      <div class="err-num">11</div>
+      <div class="err-content">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span class="chip chip-medium">Medium</span></div>
+        <div class="err-title">Typos in task keyword names</div>
+        <div class="err-body">6 completed tasks use <code class="bad">Staric</code> instead of <code class="good">Static</code> &#8212; all from the same account. These tasks are invisible to any "Static" filter and inflate an unknown category in type breakdowns. Other keyword-level typos (double letters, transposed characters) have the same effect. Task type keywords &#8212; Static, Caption, Reel, Thumbnail, Revision, etc. &#8212; must be spelled exactly as shown in this template. When in doubt, copy the keyword directly from here.</div>
+      </div>
+    </div>
+
   </div>
-</header>
 
-<nav class="nav">
-  <div class="nav-tab active" onclick="switchTab('staffing', this)">Pod Staffing</div>
-  <div class="nav-tab" onclick="switchTab('clients', this)">Client Mapping</div>
-</nav>
-
-<main>
-
-  <!-- STAFFING TAB -->
-  <div id="tab-staffing" class="tab-panel active">
-
-    <div class="section-title">Creative Pods</div>
-
-    <div class="pods-grid">
-
-      <!-- POD 1 -->
-      <div class="pod-card pod-1" style="animation-delay:0s">
-        <div class="pod-header">
-          <div class="pod-name"><span class="pod-dot"></span> Pod 1</div>
-          <div class="pod-count">11 members</div>
-        </div>
-        <div class="member-row"><div><div class="member-name">Mohamed Ismail</div><div class="member-title">Art Director</div></div><div class="func-tag">Design</div><div class="level-badge level-ACD">ACD</div></div>
-        <div class="member-row"><div><div class="member-name">Reem Elkadeem</div><div class="member-title">Content Manager</div></div><div class="func-tag">Content</div><div class="level-badge level-Lead">Lead</div></div>
-        <div class="member-row"><div><div class="member-name">Assem Ahmed</div><div class="member-title">Senior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Lead">Lead</div></div>
-        <div class="member-row"><div><div class="member-name">Alaa Abdelrahman</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Mohamed Gabr</div><div class="member-title">Mid-level Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Mohamed Magdy</div><div class="member-title">Mid-level Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Mostafa Attia</div><div class="member-title">Mid-level Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Shahd Mohamed</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Zakaria Mohamed</div><div class="member-title">Junior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Sara Mohamed</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Mohamed Essam</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
-      </div>
-
-      <!-- POD 2 -->
-      <div class="pod-card pod-2" style="animation-delay:0.1s">
-        <div class="pod-header">
-          <div class="pod-name"><span class="pod-dot"></span> Pod 2</div>
-          <div class="pod-count">12 members</div>
-        </div>
-        <div class="member-row"><div><div class="member-name">Yossra Alaaeldin</div><div class="member-title">Head of Content Creation</div></div><div class="func-tag">Content</div><div class="level-badge level-ACD">ACD</div></div>
-        <div class="member-row"><div><div class="member-name">Mohab Awad</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Lead">Lead</div></div>
-        <div class="member-row"><div><div class="member-name">Mohamed Khaled</div><div class="member-title">Senior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Lead">Lead</div></div>
-        <div class="member-row"><div><div class="member-name">Gehad Ahmed</div><div class="member-title">Senior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Amany Mohamed</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Omar Mohamed</div><div class="member-title">Senior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Amira Mostafa</div><div class="member-title">Mid-level Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Esraa Adel</div><div class="member-title">Mid-level Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Enas Mohamed</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Yussef Ashraf</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Omar Farid</div><div class="member-title">Junior Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Ahmed Masoud</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
-      </div>
-
-      <!-- POD 3 -->
-      <div class="pod-card pod-3" style="animation-delay:0.2s">
-        <div class="pod-header">
-          <div class="pod-name"><span class="pod-dot"></span> Pod 3</div>
-          <div class="pod-count">12 members</div>
-        </div>
-        <div class="member-row"><div><div class="member-name">Abdelrahman Magdy</div><div class="member-title">Head of Multimedia</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-ACD">ACD</div></div>
-        <div class="member-row"><div><div class="member-name">Donia Ahmed</div><div class="member-title">Content Manager</div></div><div class="func-tag">Content</div><div class="level-badge level-Lead">Lead</div></div>
-        <div class="member-row"><div><div class="member-name">Salwa Mohamed</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Lead">Lead</div></div>
-        <div class="member-row"><div><div class="member-name">Muhannad Elshater</div><div class="member-title">Senior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Ibrahim Abdelmonaem</div><div class="member-title">Mid-level Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Ahmed Badr</div><div class="member-title">Mid-level MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Marwan Mohamed</div><div class="member-title">Mid-level Video Editor</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Abdelrahman Tarek</div><div class="member-title">Junior Content Creator</div></div><div class="func-tag">Content</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Aya Mohy</div><div class="member-title">Junior Graphic Designer</div></div><div class="func-tag">Design</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Mahmoud Altaib</div><div class="member-title">Junior MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Omar Abdellatif</div><div class="member-title">Intern MM Designer</div></div><div class="func-tag">Multimedia</div><div class="level-badge level-Intern">Intern</div></div>
-      </div>
-    </div>
-
-    <div class="section-title">Shared Functions</div>
-
-    <div class="shared-grid">
-
-      <!-- Account Management -->
-      <div class="shared-card">
-        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Account Management</span></div>
-        <div class="member-row"><div><div class="member-name">Esraa Alaaeldin</div><div class="member-title">Account Director</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Director">Director</div></div>
-        <div class="member-row"><div><div class="member-name">Yasmin Hisham</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Shaimaa Ghareeb</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Rowan Ehab</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Rowaida Mohamed</div><div class="member-title">Senior Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Sama El Masry</div><div class="member-title">Mid-level Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Latifa Mohamed</div><div class="member-title">Mid-level Account Manager</div></div><div class="func-tag">Acct Mgmt</div><div class="level-badge level-Mid">Mid</div></div>
-      </div>
-
-      <!-- Performance Marketing -->
-      <div class="shared-card">
-        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Performance Marketing</span></div>
-        <div class="member-row"><div><div class="member-name">Israa Elsayed</div><div class="member-title">Head of Performance Marketing</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Head">Head</div></div>
-        <div class="member-row"><div><div class="member-name">Yomna Ibrahim</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Merna Raafat</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Ibrahim Mostafa</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Hisham Gaber</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Rana Eltayeb</div><div class="member-title">Senior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Alaa Adel</div><div class="member-title">Junior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Junior">Junior</div></div>
-        <div class="member-row"><div><div class="member-name">Ahmed Elnoby</div><div class="member-title">Junior Performance Marketer</div></div><div class="func-tag">Perf Mktg</div><div class="level-badge level-Junior">Junior</div></div>
-      </div>
-
-      <!-- Community & Ops -->
-      <div class="shared-card">
-        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Community Management</span></div>
-        <div class="member-row"><div><div class="member-name">Asmaa Elwan</div><div class="member-title">Head of Community Management</div></div><div class="func-tag">Community</div><div class="level-badge level-Head">Head</div></div>
-        <div class="member-row"><div><div class="member-name">Nourhan Ahmed</div><div class="member-title">Senior Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Senior">Senior</div></div>
-        <div class="member-row"><div><div class="member-name">Meriam Michael</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Mayada Ahmed</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Nourhan Mohamed</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Sara Ahmed</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
-        <div class="member-row"><div><div class="member-name">Suzan Ibrahim</div><div class="member-title">Community Manager</div></div><div class="func-tag">Community</div><div class="level-badge level-Mid">Mid</div></div>
-      </div>
-
-      <!-- Operations -->
-      <div class="shared-card">
-        <div class="shared-header"><span class="shared-icon"></span><span class="shared-title">Operations & Admin</span></div>
-        <div class="member-row"><div><div class="member-name">Mona Lotfy</div><div class="member-title">Operations Manager</div></div><div class="func-tag">Operations</div><div class="level-badge level-Manager">Manager</div></div>
-        <div class="member-row"><div><div class="member-name">Mahmoud Hisham</div><div class="member-title">Operations Executive</div></div><div class="func-tag">Operations</div><div class="level-badge level-Executive">Executive</div></div>
-        <div class="member-row"><div><div class="member-name">Alaa Ibrahim</div><div class="member-title">EA / Office Manager</div></div><div class="func-tag">CEO Office</div><div class="level-badge level-Manager">Manager</div></div>
-      </div>
-    </div>
-
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <div class="doc-footer-text">AdMedica Internal Document &#8212; Not for distribution</div>
+    <div class="doc-footer-brand">ADMEDICA</div>
   </div>
 
-  <!-- CLIENTS TAB -->
-  <div id="tab-clients" class="tab-panel">
-
-    <div class="totals-bar">
-      <div class="total-card">
-        <div class="total-pod-label"><span class="pod-dot" style="background:var(--pod1);box-shadow:0 0 10px var(--pod1)"></span>Pod 1</div>
-        <div class="total-pieces" style="color:var(--pod1)">243</div>
-        <div class="total-breakdown">
-          <div class="total-item"><span>Statics</span><span class="val">136</span></div>
-          <div class="total-item"><span>Motion</span><span class="val">12</span></div>
-          <div class="total-item"><span>Reels VE</span><span class="val">49</span></div>
-          <div class="total-item"><span>AI Reels</span><span class="val">46</span></div>
-        </div>
-      </div>
-      <div class="total-card">
-        <div class="total-pod-label"><span class="pod-dot" style="background:var(--pod2);box-shadow:0 0 10px var(--pod2)"></span>Pod 2</div>
-        <div class="total-pieces" style="color:#A78BFA">243</div>
-        <div class="total-breakdown">
-          <div class="total-item"><span>Statics</span><span class="val">113</span></div>
-          <div class="total-item"><span>Motion</span><span class="val">24</span></div>
-          <div class="total-item"><span>Reels VE</span><span class="val">30</span></div>
-          <div class="total-item"><span>AI Reels</span><span class="val">76</span></div>
-        </div>
-      </div>
-      <div class="total-card">
-        <div class="total-pod-label"><span class="pod-dot" style="background:var(--pod3);box-shadow:0 0 10px var(--pod3)"></span>Pod 3</div>
-        <div class="total-pieces" style="color:#34D399">237</div>
-        <div class="total-breakdown">
-          <div class="total-item"><span>Statics</span><span class="val">105</span></div>
-          <div class="total-item"><span>Motion</span><span class="val">26</span></div>
-          <div class="total-item"><span>Reels VE</span><span class="val">24</span></div>
-          <div class="total-item"><span>AI Reels</span><span class="val">82</span></div>
-        </div>
-      </div>
-      <div class="total-card" style="background:rgba(255,255,255,0.03)">
-        <div class="total-pod-label" style="color:var(--muted)">Grand Total</div>
-        <div class="total-pieces">723</div>
-        <div class="total-breakdown">
-          <div class="total-item"><span>Statics</span><span class="val">354</span></div>
-          <div class="total-item"><span>Motion</span><span class="val">62</span></div>
-          <div class="total-item"><span>Reels VE</span><span class="val">103</span></div>
-          <div class="total-item"><span>AI Reels</span><span class="val">204</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin: 24px 0 0;">
-      <div class="pod-filter">
-        <button class="pod-btn active-all" onclick="filterPod('all', this)">All Pods</button>
-        <button class="pod-btn" onclick="filterPod('Pod 1', this)">Pod 1</button>
-        <button class="pod-btn" onclick="filterPod('Pod 2', this)">Pod 2</button>
-        <button class="pod-btn" onclick="filterPod('Pod 3', this)">Pod 3</button>
-      </div>
-      <div class="search-box">
-        <span class="search-icon">⌕</span>
-        <input type="text" id="searchInput" placeholder="Search clients or AMs..." oninput="searchClients(this.value)">
-      </div>
-    </div>
-
-    <div class="clients-table" style="margin-top:16px">
-      <div class="clients-header">
-        <div>Client</div>
-        <div>Pieces/Mo</div>
-        <div>Primary AM</div>
-        <div>Statics</div>
-        <div>Motion</div>
-        <div>Reels VE</div>
-        <div>AI Reels</div>
-      </div>
-
-      <!-- Pod 1 Clients -->
-      <div class="client-row" data-pod="Pod 1" data-search="amr gaafar sama el masry"><div class="client-name">Amr Gaafar<small>Medical / Dental</small></div><div><span class="pieces-num" style="color:var(--pod1)">14</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="bassem dental yasmin hisham"><div class="client-name">Bassem Dental<small>Dental</small></div><div><span class="pieces-num" style="color:var(--pod1)">16</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val has-val">8</div><div class="type-val has-val">4</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="be in health shaimaa ghareeb"><div class="client-name">Be in Health<small>Health & Wellness</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="cairo gourmet yasmin hisham"><div class="client-name">Cairo Gourmet<small>Food & Beverage</small></div><div><span class="pieces-num" style="color:var(--pod1)">15</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">9</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="chill app yasmin hisham"><div class="client-name">Chill App<small>App / Tech</small></div><div><span class="pieces-num" style="color:var(--pod1)">14</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="house of braces sama el masry"><div class="client-name">House of Braces<small>Dental / Medical</small></div><div><span class="pieces-num" style="color:var(--pod1)">16</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val has-val">12</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="sgh riyadh rowan ehab"><div class="client-name">SGH Riyadh<small>Video Editing Reels Only</small></div><div><span class="pieces-num" style="color:var(--pod1)">60</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">20</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="doaa hamdy latifa"><div class="client-name">Doaa Hamdy<small>Medical / Personal Brand</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val">—</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="nassef ent sama el masry"><div class="client-name">Nassef ENT<small>Medical / ENT</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val">—</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="bareeq clinics yasmin hisham"><div class="client-name">Bareeq Clinics<small>Medical / Clinic</small></div><div><span class="pieces-num" style="color:var(--pod1)">12</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
-      <div class="client-row" data-pod="Pod 1" data-search="sgh riyadh statics rowan ehab"><div class="client-name">SGH Riyadh<small>Statics Only</small></div><div><span class="pieces-num" style="color:var(--pod1)">100</span></div><div><span class="pod-pill p1">Pod 1</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val has-val">100</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
-
-      <!-- Pod 2 Clients -->
-      <div class="client-row" data-pod="Pod 2" data-search="al-alem dental rowan ehab"><div class="client-name">Al-Alem Dental<small>Dental</small></div><div><span class="pieces-num" style="color:#A78BFA">16</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val has-val">4</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="alturki holding sama el masry"><div class="client-name">Alturki Holding<small>Corporate / Holding</small></div><div><span class="pieces-num" style="color:#A78BFA">12</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">12</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="amira badawy shaimaa ghareeb"><div class="client-name">Amira Badawy<small>Personal Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">14</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">10</div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="ashraf abou ali sama el masry"><div class="client-name">Ashraf Abou Ali<small>Personal Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">14</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">10</div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="gddc yasmin hisham"><div class="client-name">GDDC<small>Medical / Clinic</small></div><div><span class="pieces-num" style="color:#A78BFA">16</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">8</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">8</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="iris eye hospital latifa"><div class="client-name">IRIS Eye Hospital<small>Medical / Eye</small></div><div><span class="pieces-num" style="color:#A78BFA">16</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">6</div><div class="type-val has-val">6</div><div class="type-val has-val">4</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="perfect dental care latifa"><div class="client-name">Perfect Dental Care<small>Dental</small></div><div><span class="pieces-num" style="color:#A78BFA">10</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">10</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="lasik plus rowaida mohamed"><div class="client-name">LASIK Plus<small>Medical / Eye</small></div><div><span class="pieces-num" style="color:#A78BFA">9</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">9</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="dr. mohamed assem latifa"><div class="client-name">Dr. Mohamed Assem<small>Medical / Personal Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">18</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">12</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="madina libya icsi yasmin hisham"><div class="client-name">Madina Libya - ICSI<small>Medical</small></div><div><span class="pieces-num" style="color:#A78BFA">18</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Yasmin Hisham</div></div><div class="type-val has-val">12</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="sapphire smiles shaimaa yasmin"><div class="client-name">Sapphire Smiles<small>Dental</small></div><div><span class="pieces-num" style="color:#A78BFA">50</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Shaimaa / Yasmin</div></div><div class="type-val has-val">25</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">25</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="sgh madinah rowaida mohamed"><div class="client-name">SGH Madinah<small>Medical</small></div><div><span class="pieces-num" style="color:#A78BFA">40</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">10</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">30</div></div>
-      <div class="client-row" data-pod="Pod 2" data-search="ashtoukhey sama el masry"><div class="client-name">Ashtoukhey<small>Retail / Brand</small></div><div><span class="pieces-num" style="color:#A78BFA">10</span></div><div><span class="pod-pill p2">Pod 2</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">10</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
-
-      <!-- Pod 3 Clients -->
-      <div class="client-row" data-pod="Pod 3" data-search="aurooj rowaida mohamed"><div class="client-name">Aurooj<small>Brand / Lifestyle</small></div><div><span class="pieces-num" style="color:#34D399">12</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">8</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">4</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="esawy latifa"><div class="client-name">Esawy<small>Medical / Dental</small></div><div><span class="pieces-num" style="color:#34D399">15</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">3</div><div class="type-val has-val">3</div><div class="type-val">—</div><div class="type-val has-val">9</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="heshmat dental rowaida"><div class="client-name">Heshmat Dental<small>Dental</small></div><div><span class="pieces-num" style="color:#34D399">10</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">4</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="isos rowaida"><div class="client-name">ISOS<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">6</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="royal dental rowaida"><div class="client-name">Royal Dental<small>Dental</small></div><div><span class="pieces-num" style="color:#34D399">6</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="kuc hospital latifa"><div class="client-name">KUC Hospital<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">12</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val">—</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">6</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="madina hospital shaimaa ghareeb"><div class="client-name">Madina Hospital<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">12</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">6</div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="okba ibn nafaa hospital shaimaa"><div class="client-name">Okba Ibn Nafaa Hospital<small>Medical</small></div><div><span class="pieces-num" style="color:#34D399">17</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">12</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">5</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="rsc ksa sama el masry"><div class="client-name">RSC - KSA<small>Healthcare / KSA</small></div><div><span class="pieces-num" style="color:#34D399">14</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="rsc uae sama el masry"><div class="client-name">RSC - UAE<small>Healthcare / UAE</small></div><div><span class="pieces-num" style="color:#34D399">14</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Sama El Masry</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="dar el-zokora kids shaimaa"><div class="client-name">Dar El-Zokora Kids<small>Pediatric / Kids</small></div><div><span class="pieces-num" style="color:#34D399">8</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">2</div><div class="type-val has-val">2</div><div class="type-val has-val">4</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="revita latifa"><div class="client-name">Revita<small>Health / Wellness</small></div><div><span class="pieces-num" style="color:#34D399">15</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Latifa</div></div><div class="type-val has-val">12</div><div class="type-val has-val">3</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="dar el-zokora shaimaa"><div class="client-name">Dar El-Zokora<small>Medical / General</small></div><div><span class="pieces-num" style="color:#34D399">22</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">8</div><div class="type-val has-val">6</div><div class="type-val has-val">8</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="scd spanish center dubai rowaida"><div class="client-name">SCD - Spanish Center Dubai<small>Education / Dubai</small></div><div><span class="pieces-num" style="color:#34D399">14</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowaida Mohamed</div></div><div class="type-val has-val">6</div><div class="type-val">—</div><div class="type-val has-val">4</div><div class="type-val has-val">4</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="osama ghattas shaimaa"><div class="client-name">Osama Ghattas<small>Medical / Personal Brand</small></div><div><span class="pieces-num" style="color:#34D399">20</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Shaimaa Ghareeb</div></div><div class="type-val has-val">20</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div></div>
-      <div class="client-row" data-pod="Pod 3" data-search="sgh riyadh ai reels rowan ehab"><div class="client-name">SGH Riyadh<small>AI Reels Only</small></div><div><span class="pieces-num" style="color:#34D399">60</span></div><div><span class="pod-pill p3">Pod 3</span><div class="am-name" style="margin-top:4px">Rowan Ehab</div></div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val">—</div><div class="type-val has-val">40</div></div>
-    </div>
-
-  </div>
-
-</main>
-
-<script>
-  function switchTab(name, el) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    el.classList.add('active');
-  }
-
-  let currentPod = 'all';
-  let currentSearch = '';
-
-  function filterPod(pod, btn) {
-    currentPod = pod;
-    document.querySelectorAll('.pod-btn').forEach(b => {
-      b.className = 'pod-btn';
-    });
-    if (pod === 'all') btn.className = 'pod-btn active-all';
-    else if (pod === 'Pod 1') btn.className = 'pod-btn active-p1';
-    else if (pod === 'Pod 2') btn.className = 'pod-btn active-p2';
-    else if (pod === 'Pod 3') btn.className = 'pod-btn active-p3';
-    applyFilters();
-  }
-
-  function searchClients(val) {
-    currentSearch = val.toLowerCase();
-    applyFilters();
-  }
-
-  function applyFilters() {
-    document.querySelectorAll('.client-row').forEach((row, i) => {
-      const podMatch = currentPod === 'all' || row.dataset.pod === currentPod;
-      const searchMatch = !currentSearch || row.dataset.search.includes(currentSearch) || row.querySelector('.client-name').textContent.toLowerCase().includes(currentSearch);
-      row.classList.toggle('hidden', !(podMatch && searchMatch));
-      if (!(row.classList.contains('hidden'))) {
-        row.style.animationDelay = (i * 0.03) + 's';
-      }
-    });
-  }
-</script>
+</div>
 </body>
 </html>
